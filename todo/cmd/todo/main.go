@@ -12,6 +12,17 @@ import (
 const todoFileName = ".todo.json"
 
 func main() {
+	flag.Usage = func() {
+		fmt.Fprintf(
+			flag.CommandLine.Output(),
+			"%s tool. Developed for The Pragmatic Bookshelf\n",
+			os.Args[0],
+		)
+		fmt.Fprintf(flag.CommandLine.Output(), "Copyright 2022\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage information:")
+		flag.PrintDefaults()
+	}
+
 	task := flag.String("task", "", "Task to be included int the ToDo list")
 	list := flag.Bool("list", false, "List all tasks")
 	complete := flag.Int("complete", 0, "Item to be completed")
@@ -30,11 +41,7 @@ func main() {
 	switch {
 	case *list:
 		// list current ToDo items
-		for _, item := range *l {
-			if !item.Done {
-				fmt.Println(item.Task)
-			}
-		}
+		fmt.Println(l)
 	case *complete > 0:
 		// complete the given item
 		if err := l.Complete(*complete); err != nil {
