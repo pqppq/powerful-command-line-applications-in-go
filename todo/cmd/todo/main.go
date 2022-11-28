@@ -41,7 +41,7 @@ func main() {
 	switch {
 	case *list:
 		// list current ToDo items
-		fmt.Println(l)
+		fmt.Print(l)
 	case *complete > 0:
 		// complete the given item
 		if err := l.Complete(*complete); err != nil {
