@@ -8,10 +8,15 @@ import (
 	"github.com/pqppq/todo"
 )
 
-// hardcoding the file name
-const todoFileName = ".todo.json"
+// default file name
+var todoFileName = ".todo.json"
 
 func main() {
+	// check if the use defined the env variable for a custom file name
+	if os.Getenv("TODO_FILENAME") != "" {
+		todoFileName = os.Getenv("TODO_FILENAME")
+	}
+
 	flag.Usage = func() {
 		fmt.Fprintf(
 			flag.CommandLine.Output(),
