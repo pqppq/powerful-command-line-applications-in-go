@@ -4,12 +4,34 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"io"
+	"bufio"
+	"strings"
 
 	"github.com/pqppq/todo"
 )
 
 // default file name
 var todoFileName = ".todo.json"
+
+// get task function decides where to get the description for a new
+// task from: arguments or stdin
+func getTask(r io.Reader, args ...string) (string, error) {
+	if len(args) > 0 {
+		return strings.Join(args, " "), nil
+	}
+	s := bufio.NewScanner(r)
+	s.Scan()
+	if err := s.Err(); err != nil {
+		return "", nil
+	}
+
+	if len(s.Text()) == 0 {
+		return "", fmt.Errorf("Task cannot be blank")
+	}
+	return s.Text(), nil
+
+}
 
 func main() {
 	// check if the use defined the env variable for a custom file name
@@ -28,7 +50,7 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	task := flag.String("task", "", "Task to be included int the ToDo list")
+	add := flag.Bool("add", false, "Add task to the ToDo list")
 	list := flag.Bool("list", false, "List all tasks")
 	complete := flag.Int("complete", 0, "Item to be completed")
 
@@ -44,6 +66,20 @@ func main() {
 	}
 	// decide what to do based on provided flags
 	switch {
+	case *add:
+		// when any arguments (excluding flags) are provided, they will be
+		// used as the new task
+		t, err := getTask(os.Stdin, flag.Args()...)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		l.Add(t)
+		// save the new list
+		if err := l.Save(todoFileName); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	case *list:
 		// list current ToDo items
 		fmt.Print(l)
@@ -53,13 +89,6 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		// save the new list
-		if err := l.Save(todoFileName); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-	case *task != "":
-		l.Add(*task)
 		// save the new list
 		if err := l.Save(todoFileName); err != nil {
 			fmt.Fprintln(os.Stderr, err)
