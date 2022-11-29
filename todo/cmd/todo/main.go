@@ -30,7 +30,6 @@ func getTask(r io.Reader, args ...string) (string, error) {
 		return "", fmt.Errorf("Task cannot be blank")
 	}
 	return s.Text(), nil
-
 }
 
 func main() {
@@ -54,6 +53,7 @@ func main() {
 	list := flag.Bool("list", false, "List all tasks")
 	complete := flag.Int("complete", 0, "Item to be completed")
 	delete := flag.Int("delete", 0, "Delete task")
+	remain:= flag.Bool("remain", false, "Show completed tasks")
 
 	flag.Parse()
 
@@ -82,8 +82,13 @@ func main() {
 			os.Exit(1)
 		}
 	case *list:
-		// list current ToDo items
-		fmt.Print(l)
+		if *remain {
+			// show only remained task
+			fmt.Print(l.RemainedTask())
+		} else {
+			// show all tasks including completed
+			fmt.Print(l)
+		}
 	case *complete > 0:
 		// complete the given item
 		if err := l.Complete(*complete); err != nil {
