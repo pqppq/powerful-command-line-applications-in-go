@@ -16,20 +16,25 @@ var todoFileName = ".todo.json"
 
 // get task function decides where to get the description for a new
 // task from: arguments or stdin
-func getTask(r io.Reader, args ...string) (string, error) {
+func getTask(r io.Reader, args ...string) (*todo.List, error) {
+	l := &todo.List {}
 	if len(args) > 0 {
-		return strings.Join(args, " "), nil
+		t := strings.Join(args, " ")
+		l.Add(t)
+		return l, nil
 	}
 	s := bufio.NewScanner(r)
-	s.Scan()
-	if err := s.Err(); err != nil {
-		return "", nil
+	for s.Scan() {
+		if err := s.Err(); err != nil {
+			return l, nil
+		}
+		t := s.Text()
+		if len(t) == 0 {
+			return l, fmt.Errorf("Task cannot be blank")
+		}
+		l.Add(t)
 	}
-
-	if len(s.Text()) == 0 {
-		return "", fmt.Errorf("Task cannot be blank")
-	}
-	return s.Text(), nil
+	return l, nil
 }
 
 func main() {
@@ -70,12 +75,12 @@ func main() {
 	case *add:
 		// when any arguments (excluding flags) are provided, they will be
 		// used as the new task
-		t, err := getTask(os.Stdin, flag.Args()...)
+		ls, err := getTask(os.Stdin, flag.Args()...)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		l.Add(t)
+		l.Merge(*ls)
 		// save the new list
 		if err := l.Save(todoFileName); err != nil {
 			fmt.Fprintln(os.Stderr, err)

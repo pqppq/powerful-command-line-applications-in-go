@@ -31,6 +31,10 @@ func (l *List) Add(task string) {
 	*l = append(*l, t)
 }
 
+func (l *List) Merge(list List) {
+	*l = append(*l, list...)
+}
+
 // delete the item from the list
 func (l *List) Delete(i int) error {
 	ls := *l
@@ -38,7 +42,7 @@ func (l *List) Delete(i int) error {
 		return fmt.Errorf("Item %d does not exist.", i)
 	}
 
-	*l = append(ls[ :i-1 ], ls[i:]...)
+	*l = append(ls[:i-1], ls[i:]...)
 	return nil
 }
 
@@ -88,7 +92,7 @@ func (l *List) Get(filename string) error {
 
 func (l *List) String() string {
 	formatted := ""
-	for k,t := range *l{
+	for k, t := range *l {
 		prefix := "[ ]"
 		if t.Done {
 			prefix = "[x]"
@@ -96,6 +100,22 @@ func (l *List) String() string {
 
 		// adjusting the item number k to preint numbers starting from 1 instead of 0
 		formatted += fmt.Sprintf("%s %d: %s\n", prefix, k+1, t.Task)
+	}
+	return formatted
+}
+
+func (l *List) RemainedTask() string {
+	formatted := ""
+	c := 1
+	for _, t := range *l {
+		prefix := "[ ]"
+		if t.Done {
+			continue
+		}
+
+		// adjusting the item number k to preint numbers starting from 1 instead of 0
+		formatted += fmt.Sprintf("%s %d: %s\n", prefix, c, t.Task)
+		c++
 	}
 	return formatted
 }
