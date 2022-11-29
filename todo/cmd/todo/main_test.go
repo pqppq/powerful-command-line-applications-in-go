@@ -12,7 +12,7 @@ import (
 
 var (
 	binName  = "todo"
-	fileName = ".todo.json"
+	fileName = os.Getenv("TODO_FILENAME")
 )
 
 func TestMain(m *testing.M) {
