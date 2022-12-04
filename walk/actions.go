@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // return whether to filter out and ignore the current path
@@ -14,8 +15,11 @@ func filterOut(path, ext string, minSize int64, info os.FileInfo) bool {
 	if info.IsDir() || info.Size() < minSize {
 		return true
 	}
-	if ext != "" && filepath.Ext(path) != ext {
-		return true
+	e := filepath.Ext(path)
+	for _, ef := range strings.Split(ext, " ") {
+		if ef != "" && e != ef {
+			return true
+		}
 	}
 	return false
 }
@@ -29,7 +33,6 @@ func deleteFile(path string, delLogger *log.Logger) error {
 	if err := os.Remove(path); err != nil {
 		return err
 	}
-	fmt.Printf("deleted %s\n", path)
 
 	delLogger.Println(path)
 	return nil

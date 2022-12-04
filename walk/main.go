@@ -33,7 +33,7 @@ func main() {
 	archive := flag.String("archive", "", "Archive directory")
 	del := flag.Bool("del", false, "Delete files")
 	// filter options
-	ext := flag.String("ext", "", "File extension to filter out")
+	ext := flag.String("ext", "", "File extensions to filter out")
 	size := flag.Int64("size", 0, "Minimum file size")
 	flag.Parse()
 
