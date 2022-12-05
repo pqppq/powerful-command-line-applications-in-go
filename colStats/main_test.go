@@ -17,6 +17,22 @@ func TestRun(t *testing.T) {
 		expErr error
 	}{
 		{
+			name:   "RunMin",
+			col:    3,
+			op:     "min",
+			exp:    "218\n",
+			files:  []string{"./testdata/example.csv"},
+			expErr: nil,
+		},
+		{
+			name:   "RunMax",
+			col:    3,
+			op:     "max",
+			exp:    "238\n",
+			files:  []string{"./testdata/example.csv"},
+			expErr: nil,
+		},
+		{
 			name:   "RunAvgFile",
 			col:    3,
 			op:     "avg",
