@@ -25,7 +25,7 @@ func newTimeoutStep(
 	return s
 }
 
-func (s timeoutStep) exec() (string, nil) {
+func (s timeoutStep) exec() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 	defer cancel()
 
