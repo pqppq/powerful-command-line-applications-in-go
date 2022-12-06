@@ -16,7 +16,7 @@ func TestRun(t *testing.T) {
 		{
 			name:   "success",
 			proj:   "./testdata/tool",
-			out:    "Go Build: SUCCESS\nGo Test: SUCCESS\n",
+			out:    "Go Build: SUCCESS\nGo Test: SUCCESS\nGofmt: SUCCESS\nGit Push: SUCCESS\n",
 			expErr: nil,
 		},
 		{
@@ -24,6 +24,12 @@ func TestRun(t *testing.T) {
 			proj:   "./testdata/toolErr",
 			out:    "",
 			expErr: &stepErr{step: "go build"},
+		},
+		{
+			name:   "failFormat",
+			proj:   "./testdata/toolFmtErr",
+			out:    "",
+			expErr: &stepErr{step: "go fmt"},
 		},
 	}
 
@@ -34,7 +40,7 @@ func TestRun(t *testing.T) {
 
 			if tc.expErr != nil {
 				if err == nil {
-					t.Errorf("Expected error: %q, got `nil`", tc.expErr)
+					t.Errorf("Expected error: %q, got `nil` instead", tc.expErr)
 				}
 				if !errors.Is(err, tc.expErr) {
 					t.Errorf("Expected error: %q, got %q instead", tc.expErr, err)
