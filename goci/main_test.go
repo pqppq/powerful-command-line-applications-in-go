@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -9,7 +10,40 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 )
+
+func mockCmdContext(ctx context.Context, exe string, args ...string) *exec.Cmd {
+
+	cs := []string{"-test.run=TestHelperProcess"}
+	cs = append(cs, exe)
+	cs = append(cs, args...)
+	cmd := exec.CommandContext(ctx, os.Args[0], cs...)
+	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	return cmd
+}
+
+func mockCmdTimeout(ctx context.Context, exe string, args ...string) *exec.Cmd {
+
+	cmd := mockCmdContext(ctx, exe, args...)
+	cmd.Env = append(cmd.Env, "GO_HELPER_TIMEOUT=1")
+	return cmd
+}
+
+func TestHelperProcess(t *testing.T) {
+	if os.Getenv("GO_WANT_HELPER_PROCESS") != "1" {
+		return
+	}
+	if os.Getenv("GO_HELPER_TIMEOUT") == "1" {
+		time.Sleep(15 * time.Second)
+	}
+	if os.Args[2] == "git" {
+		fmt.Fprintln(os.Stdout, "Everything up-to-date")
+		os.Exit(0)
+	}
+
+	os.Exit(1)
+}
 
 func TestRun(t *testing.T) {
 	_, err := exec.LookPath("git")
@@ -22,6 +56,7 @@ func TestRun(t *testing.T) {
 		out      string
 		expErr   error
 		setupGit bool
+		mockCmd  func(ctx context.Context, name string, arg ...string) *exec.Cmd
 	}{
 		{
 			name: "success",
@@ -32,6 +67,18 @@ func TestRun(t *testing.T) {
 				"Git Push: SUCCESS\n",
 			expErr:   nil,
 			setupGit: true,
+			mockCmd:  nil,
+		},
+		{
+			name: "successMock",
+			proj: "./testdata/tool",
+			out: "Go Build: SUCCESS\n" +
+				"Go Test: SUCCESS\n" +
+				"Gofmt: SUCCESS\n" +
+				"Git Push: SUCCESS\n",
+			expErr:   nil,
+			setupGit: false,
+			mockCmd:  mockCmdContext,
 		},
 		{
 			name:     "fail",
@@ -39,6 +86,7 @@ func TestRun(t *testing.T) {
 			out:      "",
 			expErr:   &stepErr{step: "go build"},
 			setupGit: false,
+			mockCmd:  nil,
 		},
 		{
 			name:     "failFormat",
@@ -46,15 +94,33 @@ func TestRun(t *testing.T) {
 			out:      "",
 			expErr:   &stepErr{step: "go fmt"},
 			setupGit: false,
+			mockCmd:  nil,
+		},
+		{
+			name:     "faileTimeout",
+			proj:     "./testdata/tool",
+			out:      "",
+			expErr:   context.DeadlineExceeded,
+			setupGit: false,
+			mockCmd:  mockCmdTimeout,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setupGit {
+				_, err := exec.LookPath("git")
+				if err != nil {
+					t.Skip("Git not installed. Skipping test.")
+				}
 				cleanup := setupGit(t, tc.proj)
 				defer cleanup()
 			}
+
+			if tc.mockCmd != nil {
+				command = tc.mockCmd
+			}
+
 			var out bytes.Buffer
 			err := run(tc.proj, &out)
 
@@ -80,6 +146,8 @@ func TestRun(t *testing.T) {
 }
 
 func setupGit(t *testing.T, proj string) func() {
+	t.Helper()
+
 	gitExec, err := exec.LookPath("git")
 	if err != nil {
 		t.Fatal(err)
@@ -107,8 +175,8 @@ func setupGit(t *testing.T, proj string) func() {
 		{[]string{"remote", "add", "origin", remoteURI}, projPath, nil},
 		{[]string{"add", "."}, projPath, nil},
 		{[]string{"commit", "-m", "test"}, projPath, []string{
-			"GIT_COMMITER_NAME=test",
-			"GIT_COMMITER_EMAIL=test@example.com",
+			"GIT_COMMITTER_NAME=test",
+			"GIT_COMMITTER_EMAIL=test@example.com",
 			"GIT_AUTHOR_NAME=test",
 			"GIT_AUTHOR_EMAL=test@example.com",
 		}},

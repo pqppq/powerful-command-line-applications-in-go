@@ -25,11 +25,14 @@ func newTimeoutStep(
 	return s
 }
 
-func (s timeoutStep) exec() (string, error) {
+var command = exec.CommandContext
+
+func (s timeoutStep) execute() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, s.exe, s.args...)
+	cmd := command(ctx, s.exe, s.args...)
+	cmd.Dir = s.proj
 	if err := cmd.Run(); err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
 			return "", &stepErr{
