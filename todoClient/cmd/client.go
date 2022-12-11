@@ -15,6 +15,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const timeFormat = "Jan/02 @15:04"
+
 var (
 	ErrConnection      = errors.New("Connection error")
 	ErrNotFound        = errors.New("Not found")
@@ -87,4 +89,17 @@ func getItems(url string) ([]item, error) {
 func getAll(apiRoot string) ([]item, error) {
 	u := fmt.Sprintf("%s/todo", apiRoot)
 	return getItems(u)
+}
+
+func getOne(url string, id int) (item, error) {
+	u := fmt.Sprintf("%s/todo/%d", url, id)
+
+	items, err := getItems(u)
+	if err != nil {
+		return item{}, err
+	}
+	if len(items) != 1 {
+		return item{}, err
+	}
+	return items[0], nil
 }
