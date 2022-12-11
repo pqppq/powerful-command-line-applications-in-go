@@ -1,3 +1,6 @@
+//go:build !integration
+// +build !integration
+
 /*
 Copyright © 2022 pqppq
 
