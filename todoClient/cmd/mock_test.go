@@ -45,7 +45,6 @@ var testResp = map[string]struct {
   "total_results": 1
 }`,
 	},
-
 	"noResults": {
 		Status: http.StatusOK,
 		Body: `{
@@ -54,15 +53,17 @@ var testResp = map[string]struct {
   "total_results": 0
 }`,
 	},
-
 	"root": {
 		Status: http.StatusOK,
 		Body:   "There's an API here",
 	},
-
 	"notFound": {
 		Status: http.StatusNotFound,
 		Body:   "404 - not found",
+	},
+	"created": {
+		Status: http.StatusCreated,
+		Body:   "",
 	},
 }
 

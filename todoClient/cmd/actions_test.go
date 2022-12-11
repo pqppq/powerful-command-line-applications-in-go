@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"testing"
 )
@@ -136,5 +137,54 @@ Completed:    No
 			}
 
 		})
+	}
+}
+
+func TestAddAction(t *testing.T) {
+	expURLPath := "/todo"
+	expMethod := http.MethodPost
+	expBody := "{\"task\":\"Task 1\"}\n"
+	expContentType := "application/json"
+	expOut := "Added task \"Task 1\" to the list\n"
+	args := []string{"Task", "1"}
+
+	url, cleanup := mockServer(
+		func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != expURLPath {
+				t.Errorf("Expected path %q, got %q instead", expURLPath, r.URL.Path)
+			}
+
+			if r.Method != expMethod {
+				t.Errorf("Expected method %q, got %q instead", expMethod, r.Method)
+			}
+
+			body, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.Body.Close()
+
+			if string(body) != expBody {
+				t.Errorf("Expected body %q, got %q instead", expBody, string(body))
+			}
+
+			contentType := r.Header.Get("Content-Type")
+			if contentType != expContentType {
+				t.Errorf("Expected Content-Type %q, got %q instead", expContentType, contentType)
+			}
+
+			w.WriteHeader(testResp["created"].Status)
+			fmt.Fprintln(w, testResp["created"].Body)
+		})
+
+	defer cleanup()
+
+	var out bytes.Buffer
+
+	if err := addAction(&out, url, args); err != nil {
+		t.Fatalf("Expected no error, got %q instead", err)
+	}
+	if expOut != out.String() {
+		t.Fatalf("Expected output %q, got %q instead", expOut, out.String())
 	}
 }
