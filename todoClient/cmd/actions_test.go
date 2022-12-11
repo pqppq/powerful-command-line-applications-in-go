@@ -1,3 +1,8 @@
+/*
+Copyright © 2022 pqppq
+
+*/
+
 package cmd
 
 import (
